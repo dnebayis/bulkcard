@@ -1,0 +1,133 @@
+'use client';
+
+import React, { useEffect, useRef, useState } from 'react';
+import { renderCardToCanvas, type CardData } from '@/lib/cardRenderer';
+
+interface CardPreviewProps {
+    data: CardData | null;
+    onCanvasReady?: (canvas: HTMLCanvasElement) => void;
+}
+
+export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [isRendering, setIsRendering] = useState(false);
+    const [rotation, setRotation] = useState({ x: 0, y: 0 });
+
+    useEffect(() => {
+        const renderCard = async () => {
+            if (!data || !canvasRef.current) return;
+
+            setIsRendering(true);
+            try {
+                await renderCardToCanvas(canvasRef.current, data);
+                if (onCanvasReady) {
+                    onCanvasReady(canvasRef.current);
+                }
+            } catch (error) {
+                console.error('Failed to render card:', error);
+            } finally {
+                setIsRendering(false);
+            }
+        };
+
+        renderCard();
+    }, [data, onCanvasReady]);
+
+    // Pokémon-style holographic hover effect (UI only)
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!containerRef.current || !data) return;
+
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const rotateX = ((y - centerY) / centerY) * -8; // dikey eğim
+        const rotateY = ((x - centerX) / centerX) * 10; // yatay eğim
+
+        setRotation({ x: rotateX, y: rotateY });
+    };
+
+    const handleMouseLeave = () => {
+        setRotation({ x: 0, y: 0 });
+    };
+
+    return (
+        <div className="border border-bulk-border bg-bulk-panel p-6">
+            {/* Card Canvas Area */}
+            <div
+                ref={containerRef}
+                className="relative w-full aspect-[1200/630] bg-bulk-bg overflow-hidden group"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{ perspective: '1000px' }}
+            >
+                {!data ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center space-y-3">
+                            <div className="w-16 h-16 mx-auto border-2 border-bulk-border rounded-full flex items-center justify-center">
+                                <svg
+                                    className="w-8 h-8 text-bulk-muted"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
+                                </svg>
+                            </div>
+                            <p className="text-sm text-bulk-muted uppercase tracking-wide">
+                                Enter username to preview
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* === TILT WRAPPER (3D EFFECT) === */}
+                        <div
+                            className="absolute inset-0 will-change-transform transition-transform duration-150 flex items-center justify-center"
+                            style={{
+                                transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+                                transformStyle: 'preserve-3d',
+                            }}
+                        >
+                            {/* === CANVAS (EXPORTED IMAGE) === */}
+                            <canvas
+                                ref={canvasRef}
+                                className="max-w-full max-h-full object-contain"
+                                style={{ imageRendering: 'crisp-edges' }}
+                            />
+                        </div>
+
+                        {/* === RENDERING OVERLAY === */}
+                        {isRendering && (
+                            <div className="absolute inset-0 bg-bulk-bg/80 flex items-center justify-center">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-5 h-5 border-2 border-bulk-accent border-t-transparent rounded-full animate-spin" />
+                                    <span className="text-sm text-bulk-muted uppercase tracking-wide">
+                                        Rendering...
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+
+            {/* Preview Label */}
+            <div className="mt-4 pt-4 border-t border-bulk-border">
+                <p className="text-xs text-bulk-muted uppercase tracking-wide text-center">
+                    {data ? 'Live Preview • 1200×630px' : 'Preview • 1200×630px'}
+                </p>
+            </div>
+        </div>
+
+    );
+};
