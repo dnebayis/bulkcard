@@ -17,13 +17,18 @@ const BACKGROUNDS = [
     '/backgrounds/7.png',
     '/backgrounds/8.png',
     '/backgrounds/9.png',
+    '/backgrounds/10.png',
+    '/backgrounds/11.png',
+    '/backgrounds/12.png',
+    '/backgrounds/13.png',
+    '/backgrounds/14.png',
 ];
 
 export const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({ selectedPath, onSelect }) => {
     return (
         <div className="space-y-3">
             <label className="text-xs font-bold text-bulk-muted uppercase tracking-wider">
-                Select Background
+                Select Bulkie
             </label>
             <div className="grid grid-cols-5 gap-3">
                 {BACKGROUNDS.map((bgPath, index) => {

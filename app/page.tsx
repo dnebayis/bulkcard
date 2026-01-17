@@ -9,6 +9,7 @@ import { exportCanvasToPNG, downloadBlob, type CardData } from '@/lib/cardRender
 
 export default function Home() {
     const [username, setUsername] = useState('');
+    const [tagline, setTagline] = useState('hi bulkie!');
     const [selectedBackground, setSelectedBackground] = useState('/backgrounds/1.png');
     const [cardData, setCardData] = useState<CardData | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -20,15 +21,14 @@ export default function Home() {
 
         setIsGenerating(true);
 
-        // Clean username (remove @ if present)
         const cleanUsername = username.trim().replace(/^@/, '');
 
-        // Simulate network delay for UX polish
         await new Promise(resolve => setTimeout(resolve, 300));
 
         const data: CardData = {
             username: cleanUsername,
             backgroundPath: selectedBackground,
+            tagline: tagline || 'hi bulkie!',
         };
 
         setCardData(data);
@@ -44,7 +44,6 @@ export default function Home() {
             downloadBlob(blob, `bulk-card-${cardData?.username || 'user'}.png`);
         } catch (err) {
             console.error('Download failed:', err);
-            // alert('Failed to download'); // Removed alert to be cleaner
         } finally {
             setIsDownloading(false);
         }
@@ -52,33 +51,28 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-bulk-bg text-bulk-text font-sans selection:bg-bulk-accent/20">
-            {/* Header */}
             <header className="fixed top-0 left-0 right-0 z-50 bg-bulk-bg/80 backdrop-blur-md border-b border-bulk-border">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <img src="/bulk-logo-white.png" alt="BULK" className="h-6" />
                         <span className="text-bulk-muted text-sm border-l border-bulk-border pl-3 ml-1">
-                            Card Generator
+                            Card
                         </span>
                     </div>
                 </div>
             </header>
 
-            {/* Main Content */}
             <main className="min-h-screen pt-24 pb-12 px-6">
                 <div className="w-full max-w-7xl mx-auto space-y-8">
 
-                    {/* Title Section - Above Grid */}
                     <div className="space-y-4 animate-fade-in">
                         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
                             Generate Your <span className="text-bulk-accent">BULK Card</span>
                         </h1>
                     </div>
 
-                    {/* Controls + Preview Grid - Aligned */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
-                        {/* Left Column: Controls */}
                         <div className="space-y-8 animate-fade-in delay-100">
                             <div className="space-y-6 bg-bulk-panel/50 p-6 rounded-xl border border-bulk-border/50">
                                 <Input
@@ -86,6 +80,14 @@ export default function Home() {
                                     placeholder="elonmusk"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
+                                    disabled={isGenerating}
+                                />
+
+                                <Input
+                                    label="Custom Tagline"
+                                    placeholder="hi bulkie!"
+                                    value={tagline}
+                                    onChange={(e) => setTagline(e.target.value)}
                                     disabled={isGenerating}
                                 />
 
@@ -136,7 +138,6 @@ export default function Home() {
                             )}
                         </div>
 
-                        {/* Right Column: Preview */}
                         <div className="lg:sticky lg:top-32 animate-fade-in delay-200">
                             <CardPreview
                                 data={cardData}

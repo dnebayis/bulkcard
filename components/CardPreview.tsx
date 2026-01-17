@@ -34,7 +34,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
         renderCard();
     }, [data, onCanvasReady]);
 
-    // Pokémon-style holographic hover effect (UI only)
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!containerRef.current || !data) return;
 
@@ -57,7 +56,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
 
     return (
         <div className="border border-bulk-border bg-bulk-panel p-6">
-            {/* Card Canvas Area */}
             <div
                 ref={containerRef}
                 className="relative w-full aspect-[1200/630] bg-bulk-bg overflow-hidden group"
@@ -90,7 +88,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
                     </div>
                 ) : (
                     <>
-                        {/* === TILT WRAPPER (3D EFFECT) === */}
                         <div
                             className="absolute inset-0 will-change-transform transition-transform duration-150 flex items-center justify-center"
                             style={{
@@ -98,7 +95,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
                                 transformStyle: 'preserve-3d',
                             }}
                         >
-                            {/* === CANVAS (EXPORTED IMAGE) === */}
                             <canvas
                                 ref={canvasRef}
                                 className="max-w-full max-h-full object-contain"
@@ -106,7 +102,6 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
                             />
                         </div>
 
-                        {/* === RENDERING OVERLAY === */}
                         {isRendering && (
                             <div className="absolute inset-0 bg-bulk-bg/80 flex items-center justify-center">
                                 <div className="flex items-center gap-3">
@@ -121,8 +116,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
                 )}
             </div>
 
-            {/* Preview Label */}
-            <div className="mt-4 pt-4 border-t border-bulk-border">
+            <div className="mt-3 flex items-center justify-center gap-2 text-xs text-bulk-muted">
                 <p className="text-xs text-bulk-muted uppercase tracking-wide text-center">
                     {data ? 'Live Preview • 1200×630px' : 'Preview • 1200×630px'}
                 </p>
