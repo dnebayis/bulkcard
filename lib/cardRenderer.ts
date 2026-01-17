@@ -271,6 +271,17 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
     const textY_Tagline = statusY + 70; // Increased spacing (was 50)
     ctx.fillText(tagline, textStartX, textY_Tagline);
 
+    // Draw Footer URL (Bottom Right)
+    // Actually user said "Bottom Left". 
+    // Let's place it Bottom Left. 
+    // Margin x = 50px (to match typical internal padding)
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Simple semi-transparent white
+    ctx.font = '500 20px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText("x.com/bulktrade", 50, CARD_HEIGHT - 40);
+    ctx.restore();
+
     const logoImg = await loadImageSafe('/logo.png');
     if (logoImg) {
         const logoTargetHeight = 50;

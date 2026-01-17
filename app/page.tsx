@@ -119,7 +119,7 @@ export default function Home() {
                                     </Button>
 
                                     <a
-                                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("hi bulkie ✦ this one's mine! @bulktrade")}`}
+                                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("hi bulkie ✦ this one's mine! @bulktrade https://www.bulkcard.org/")}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center w-full py-4 text-sm font-medium text-bulk-muted hover:text-bulk-text transition-colors uppercase tracking-wider group"
