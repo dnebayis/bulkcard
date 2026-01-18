@@ -13,6 +13,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
     const containerRef = useRef<HTMLDivElement>(null);
     const [isRendering, setIsRendering] = useState(false);
     const [rotation, setRotation] = useState({ x: 0, y: 0 });
+    const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
 
     useEffect(() => {
         const renderCard = async () => {
@@ -48,10 +49,17 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
         const rotateY = ((x - centerX) / centerX) * 10; // yatay eğim
 
         setRotation({ x: rotateX, y: rotateY });
+
+        // Track mouse percent for gradient
+        setMousePos({
+            x: (x / rect.width) * 100,
+            y: (y / rect.height) * 100
+        });
     };
 
     const handleMouseLeave = () => {
         setRotation({ x: 0, y: 0 });
+        // Optional: Reset mousePos to center or fade out
     };
 
     return (
@@ -99,6 +107,23 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
                                 ref={canvasRef}
                                 className="max-w-full max-h-full object-contain"
                                 style={{ imageRendering: 'crisp-edges' }}
+                            />
+                            {/* Option A: Subtle Border Shimmer (UI Overlay) */}
+                            <div
+                                className="absolute inset-0 border-2 border-bulk-accent opacity-0 group-hover:opacity-50 transition-opacity duration-500 pointer-events-none rounded-lg"
+                                style={{ boxShadow: '0 0 15px rgba(19, 149, 114, 0.15)' }}
+                            />
+
+                            {/* Holographic Foil Overlay (Premium Polish) */}
+                            <div
+                                className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg"
+                                style={{
+                                    background: `linear-gradient(115deg, transparent 20%, rgba(19, 149, 114, 0.15) 35%, rgba(255, 255, 255, 0.15) 50%, rgba(19, 149, 114, 0.15) 65%, transparent 80%)`,
+                                    backgroundSize: '200% 200%',
+                                    backgroundPosition: `${mousePos.x}% ${mousePos.y}%`,
+                                    mixBlendMode: 'color-dodge',
+                                    zIndex: 10
+                                }}
                             />
                         </div>
 

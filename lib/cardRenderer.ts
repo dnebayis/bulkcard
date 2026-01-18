@@ -131,7 +131,7 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
 
     if (bgImage) {
         ctx.save();
-        const maxMascotHeight = CARD_HEIGHT * 0.65; // Reduced size
+        const maxMascotHeight = CARD_HEIGHT * 0.68; // Slightly enlarged (was 0.65)
         const scale = maxMascotHeight / bgImage.height;
         const w = bgImage.width * scale;
         const h = bgImage.height * scale;
@@ -144,6 +144,29 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
         ctx.drawImage(bgImage, x, y, w, h);
         ctx.restore();
     }
+
+    // --- CARD ID / SIGNATURE (Premium Micro-Detail) ---
+    // Random ID generation for each card instance
+    const generateCardId = (): string => {
+        return Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    };
+
+    const cardId = generateCardId();
+    const signature = `bulkcard ✦ ${cardId}`;
+
+    ctx.save();
+    ctx.font = '600 24px Inter, sans-serif'; // Bigger!
+    ctx.fillStyle = COLORS.muted;
+    ctx.globalAlpha = 0.8;
+    // Note: ctx.letterSpacing is modern API, falling back to manual if needed but widely supported in recent Chrome/FF/Safari
+    // @ts-ignore - TypeScript might complain about new canvas props
+    if (ctx.letterSpacing !== undefined) ctx.letterSpacing = '0.04em';
+
+    // Position: Top-Left with strictly defined padding
+    // Padding-left: 50px (Aligned with Footer), Padding-top: 42px
+    ctx.fillText(signature, 50, 42);
+    ctx.restore();
+    // --------------------------------------------------
 
     const padding = 60;
     const avatarSize = 320; // Reduced from 370 to give more space for text
@@ -221,14 +244,13 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
     const textX = textStartX + paddingX; // Indent text inside the frame
     const frameTop = statusY - (badgeH / 2);
 
-    // Draw Frame Background - Holographic Ribbon Effect
+    // Draw Frame Background - Premium Green Gradient (Theme Aligned)
     const holoGrad = ctx.createLinearGradient(frameX, frameTop, frameX + badgeW, frameTop + badgeH);
-    holoGrad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-    holoGrad.addColorStop(0.2, 'rgba(0, 255, 255, 0.4)'); // Cyan
-    holoGrad.addColorStop(0.4, 'rgba(255, 0, 255, 0.4)'); // Magenta
-    holoGrad.addColorStop(0.6, 'rgba(255, 255, 0, 0.4)'); // Yellow
-    holoGrad.addColorStop(0.8, 'rgba(0, 255, 255, 0.4)'); // Cyan
-    holoGrad.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+    holoGrad.addColorStop(0, 'rgba(19, 149, 114, 0.15)');
+    holoGrad.addColorStop(0.3, 'rgba(19, 149, 114, 0.35)'); // Accent Green
+    holoGrad.addColorStop(0.5, 'rgba(19, 149, 114, 0.45)'); // Slightly brighter center
+    holoGrad.addColorStop(0.7, 'rgba(19, 149, 114, 0.35)');
+    holoGrad.addColorStop(1, 'rgba(19, 149, 114, 0.15)');
 
     ctx.beginPath();
     ctx.roundRect(frameX, frameTop, badgeW, badgeH, 10);
@@ -238,7 +260,7 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
     // Draw Frame Border - White/Holographic Outline
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.lineWidth = 2;
-    ctx.shadowColor = 'cyan';
+    ctx.shadowColor = COLORS.accent;
     ctx.shadowBlur = 15;
     ctx.stroke();
 

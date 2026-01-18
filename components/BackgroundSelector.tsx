@@ -22,6 +22,7 @@ const BACKGROUNDS = [
     '/backgrounds/12.png',
     '/backgrounds/13.png',
     '/backgrounds/14.png',
+    '/backgrounds/15.png',
 ];
 
 export const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({ selectedPath, onSelect }) => {

@@ -2,10 +2,15 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-    title: "BULK Card Generator",
+    title: "Bulk Card",
     description: "Generate your premium BULK-style card. Built for the BULK ecosystem.",
     keywords: ["BULK", "card generator", "Twitter", "X", "social card"],
     authors: [{ name: "BULK" }],
+    icons: {
+        icon: '/icon.png',
+        shortcut: '/icon.png',
+        apple: '/icon.png',
+    },
     openGraph: {
         title: "BULK Card Generator",
         description: "Generate your premium BULK-style card",
