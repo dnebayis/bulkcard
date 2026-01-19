@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 interface BackgroundSelectorProps {
     selectedPath: string;
@@ -23,16 +23,41 @@ const BACKGROUNDS = [
     '/backgrounds/13.png',
     '/backgrounds/14.png',
     '/backgrounds/15.png',
+    '/backgrounds/16.png',
+    '/backgrounds/17.png',
+    '/backgrounds/18.png',
+    '/backgrounds/19.png',
+    '/backgrounds/20.png',
 ];
 
 export const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({ selectedPath, onSelect }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // Show first 10 (2 rows) by default, or all if expanded
+    const visibleBackgrounds = isExpanded ? BACKGROUNDS : BACKGROUNDS.slice(0, 10);
+
     return (
         <div className="space-y-3">
-            <label className="text-xs font-bold text-bulk-muted uppercase tracking-wider">
-                Select Bulkie
-            </label>
+            <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-bulk-muted uppercase tracking-wider">
+                    Select Bulkie
+                </label>
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-xs text-bulk-accent hover:text-bulk-text transition-colors flex items-center gap-1 font-medium"
+                >
+                    {isExpanded ? 'Show Less' : `Show All (${BACKGROUNDS.length})`}
+                    <svg
+                        className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+
             <div className="grid grid-cols-5 gap-3">
-                {BACKGROUNDS.map((bgPath, index) => {
+                {visibleBackgrounds.map((bgPath, index) => {
                     const isSelected = selectedPath === bgPath;
                     return (
                         <button

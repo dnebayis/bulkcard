@@ -1,5 +1,20 @@
 import type { Metadata } from "next";
+import { IBM_Plex_Sans, Barlow } from "next/font/google"; // Barlow is an excellent free substitute for DIN
 import "./globals.css";
+
+const ibm = IBM_Plex_Sans({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700"],
+    variable: "--font-ibm",
+    display: 'swap',
+});
+
+const din = Barlow({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700", "900"],
+    variable: "--font-din",
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
     title: "Bulk Card",
@@ -30,7 +45,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className="antialiased">
+            <body className={`${ibm.variable} ${din.variable} font-din antialiased`}>
                 {children}
             </body>
         </html>

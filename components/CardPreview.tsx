@@ -118,10 +118,10 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ data, onCanvasReady })
                             <div
                                 className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg"
                                 style={{
-                                    background: `linear-gradient(115deg, transparent 20%, rgba(19, 149, 114, 0.15) 35%, rgba(255, 255, 255, 0.15) 50%, rgba(19, 149, 114, 0.15) 65%, transparent 80%)`,
+                                    background: `linear-gradient(115deg, transparent 30%, rgba(100, 200, 255, 0.08) 45%, rgba(200, 230, 255, 0.12) 50%, rgba(100, 255, 200, 0.08) 55%, transparent 70%)`,
                                     backgroundSize: '200% 200%',
                                     backgroundPosition: `${mousePos.x}% ${mousePos.y}%`,
-                                    mixBlendMode: 'color-dodge',
+                                    mixBlendMode: 'overlay',
                                     zIndex: 10
                                 }}
                             />

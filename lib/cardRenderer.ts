@@ -2,7 +2,9 @@
 
 export interface CardData {
     username: string;
-    backgroundPath?: string;
+    displayName?: string;
+    backgroundPath?: string; // Bulkie background
+    cardBackgroundPath?: string; // Card scenic background
     tagline?: string;
 }
 
@@ -64,14 +66,16 @@ const createFallbackAvatar = (canvas: HTMLCanvasElement): HTMLCanvasElement => {
     gradient.addColorStop(1, COLORS.border);
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    // Round Rect for fallback background
+    ctx.roundRect(0, 0, size, size, 50); // Proportional radius (40/320 * 400 = 50)
     ctx.fill();
 
     ctx.strokeStyle = COLORS.accent;
     ctx.lineWidth = 3;
     ctx.globalAlpha = 0.5;
     ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size / 2 - 10, 0, Math.PI * 2);
+    // Inner decorative border
+    ctx.roundRect(10, 10, size - 20, size - 20, 45);
     ctx.stroke();
     ctx.globalAlpha = 1.0;
 
@@ -109,19 +113,22 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
     ctx.fillStyle = COLORS.bg;
     ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
 
-    const staticBgImage = await loadImageSafe('/card-background.jpg', 3000);
-    if (staticBgImage) {
-        ctx.save();
-        const scale = Math.max(CARD_WIDTH / staticBgImage.width, CARD_HEIGHT / staticBgImage.height);
-        const w = staticBgImage.width * scale;
-        const h = staticBgImage.height * scale;
-        const x = (CARD_WIDTH - w) / 2;
-        const y = (CARD_HEIGHT - h) / 2;
+    // Load optional card background (scenic/atmospheric)
+    if (data.cardBackgroundPath) {
+        const cardBgImage = await loadImageSafe(data.cardBackgroundPath, 3000);
+        if (cardBgImage) {
+            ctx.save();
+            const scale = Math.max(CARD_WIDTH / cardBgImage.width, CARD_HEIGHT / cardBgImage.height);
+            const w = cardBgImage.width * scale;
+            const h = cardBgImage.height * scale;
+            const x = (CARD_WIDTH - w) / 2;
+            const y = (CARD_HEIGHT - h) / 2;
 
-        ctx.globalAlpha = 0.3;
-        ctx.drawImage(staticBgImage, x, y, w, h);
-        ctx.globalAlpha = 1.0; // Reset opacity
-        ctx.restore();
+            ctx.globalAlpha = 0.3;
+            ctx.drawImage(cardBgImage, x, y, w, h);
+            ctx.globalAlpha = 1.0;
+            ctx.restore();
+        }
     }
 
     const bgPath = data.backgroundPath || '/backgrounds/1.png';
@@ -131,10 +138,11 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
 
     if (bgImage) {
         ctx.save();
-        const maxMascotHeight = CARD_HEIGHT * 0.68; // Slightly enlarged (was 0.65)
-        const scale = maxMascotHeight / bgImage.height;
+        // Fixed height for all mascots to ensure consistency
+        const fixedMascotHeight = 420; // Reduced from 68% (was ~462px) to fixed 420px
+        const scale = fixedMascotHeight / bgImage.height;
         const w = bgImage.width * scale;
-        const h = bgImage.height * scale;
+        const h = fixedMascotHeight;
 
         const x = CARD_WIDTH - w; // Align to right edge
         const y = CARD_HEIGHT - h; // Align to bottom edge
@@ -145,28 +153,7 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
         ctx.restore();
     }
 
-    // --- CARD ID / SIGNATURE (Premium Micro-Detail) ---
-    // Random ID generation for each card instance
-    const generateCardId = (): string => {
-        return Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-    };
 
-    const cardId = generateCardId();
-    const signature = `bulkcard ✦ ${cardId}`;
-
-    ctx.save();
-    ctx.font = '600 24px Inter, sans-serif'; // Bigger!
-    ctx.fillStyle = COLORS.muted;
-    ctx.globalAlpha = 0.8;
-    // Note: ctx.letterSpacing is modern API, falling back to manual if needed but widely supported in recent Chrome/FF/Safari
-    // @ts-ignore - TypeScript might complain about new canvas props
-    if (ctx.letterSpacing !== undefined) ctx.letterSpacing = '0.04em';
-
-    // Position: Top-Left with strictly defined padding
-    // Padding-left: 50px (Aligned with Footer), Padding-top: 42px
-    ctx.fillText(signature, 50, 42);
-    ctx.restore();
-    // --------------------------------------------------
 
     const padding = 60;
     const avatarSize = 320; // Reduced from 370 to give more space for text
@@ -186,7 +173,8 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+    // Square with rounded edges (PFP Frame)
+    ctx.roundRect(avatarX, avatarY, avatarSize, avatarSize, 40);
     ctx.clip();
 
 
@@ -197,7 +185,7 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
 
 
     ctx.beginPath();
-    ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+    ctx.roundRect(avatarX, avatarY, avatarSize, avatarSize, 40);
     ctx.lineWidth = 4;
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; // Subtle ring
     ctx.stroke();
@@ -207,102 +195,128 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
     const maxTextWidth = mascotLeftX - textStartX - 40; // 40px buffer from mascot
 
     ctx.fillStyle = COLORS.text;
-    ctx.textBaseline = 'middle';
+    ctx.textBaseline = 'alphabetic'; // Easier to stack from top-down
 
-    ctx.font = 'bold 85px Inter, sans-serif'; // Increased from 72
-    let fontSize = 85;
-    while (ctx.measureText(`@${data.username}`).width > maxTextWidth && fontSize > 40) {
-        fontSize -= 4;
-        ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+    // Determine Hierarchy
+    const primaryText = data.displayName ? data.displayName : `@${data.username}`;
+    const secondaryText = data.displayName ? `@${data.username}` : null;
+    const tertiaryText = data.tagline || ""; // No default fallback
+
+    // Text Sizes
+    let primaryFontSize = 85;
+    const secondaryFontSize = 42;
+    const tertiaryFontSize = 56;
+
+    // Gaps
+    const gap1 = 24;
+    const gap2 = 64;
+
+    // Measure Primary (Shrink if needed)
+    ctx.font = `bold ${primaryFontSize}px "IBM Plex Sans", sans-serif`;
+    while (ctx.measureText(primaryText).width > maxTextWidth && primaryFontSize > 40) {
+        primaryFontSize -= 4;
+        ctx.font = `bold ${primaryFontSize}px "IBM Plex Sans", sans-serif`;
     }
 
-    // Start text stack higher to center evenly around the Avatar
-    // CenterY - 80 puts the Status Badge (at +80) exactly in the middle
-    const textY_Handle = panelY + panelHeight / 2 - 80;
-    ctx.fillText(`@${data.username}`, textStartX, textY_Handle);
+    // Measure Secondary (Handle)
+    if (secondaryText) {
+        ctx.font = `600 ${secondaryFontSize}px "IBM Plex Sans", sans-serif`;
+        // No shrinking logic needed for small handle usually, but safe to assume it fits
+    }
 
-    // Draw "ACCESS GRANTED" Status Badge (Bulkie Green)
-    // POSITION: Below Username, Above Tagline
-    const statusText = 'ACCESS GRANTED';
-    const statusY = textY_Handle + 80; // Increased spacing (was 60)
+    // Measure Tertiary (Tagline)
+    let finalTertiaryFontSize = tertiaryFontSize;
+    ctx.font = `600 ${tertiaryFontSize}px "Barlow", sans-serif`;
+    while (ctx.measureText(tertiaryText).width > maxTextWidth && finalTertiaryFontSize > 20) {
+        finalTertiaryFontSize -= 2;
+        ctx.font = `600 ${finalTertiaryFontSize}px "Barlow", sans-serif`;
+    }
+
+    // Calculate Total Height (Caps Height approx)
+    const h1 = primaryFontSize * 0.9;
+    const h2 = secondaryText ? secondaryFontSize * 1.0 : 0;
+    const h3 = tertiaryText ? finalTertiaryFontSize * 0.9 : 0;
+
+    // Total Stack Height
+    let totalHeight = h1;
+    if (secondaryText) totalHeight += gap1 + h2;
+    if (tertiaryText) totalHeight += gap2 + h3;
+
+    // Center Y relative to Panel Center
+    const panelCenterY = panelY + panelHeight / 2;
+    // Shift StartY so the visual center of stack matches PanelCenterY
+    const startY = panelCenterY - (totalHeight / 2) + (h1 * 0.8);
+
+    // DRAW STACK
+    let currentY = startY;
+
+    // 1. Primary
+    ctx.font = `bold ${primaryFontSize}px "IBM Plex Sans", sans-serif`;
+    ctx.fillStyle = COLORS.text;
+    ctx.fillText(primaryText, textStartX, currentY);
+
+    // 2. Secondary
+    if (secondaryText) {
+        currentY += gap1 + (secondaryFontSize * 0.9);
+        ctx.font = `600 ${secondaryFontSize}px "IBM Plex Sans", sans-serif`;
+        ctx.fillStyle = COLORS.text;
+        ctx.fillText(secondaryText, textStartX, currentY);
+    }
+
+    // 3. Tertiary
+    if (tertiaryText) {
+        currentY += gap2 + (finalTertiaryFontSize * 0.8);
+
+        ctx.font = `600 ${finalTertiaryFontSize}px "Barlow", sans-serif`;
+        ctx.fillStyle = COLORS.text;
+        ctx.fillText(tertiaryText, textStartX, currentY);
+    }
+
+    // Draw "ACCESS CARD" Status Badge (Top Left Corner)
+    const statusText = 'ACCESS CARD';
 
     ctx.save();
 
-    const paddingX = 16; // More internal spacing
-
-    // Set Font BEFORE measuring to get correct width
-    ctx.font = '900 32px Inter, sans-serif'; // Massively Bold
+    const paddingX = 16;
+    ctx.font = '900 32px "Barlow", sans-serif'; // UI / Label (DIN)
     ctx.textBaseline = 'middle';
 
-    const metric = ctx.measureText(statusText);
-    const badgeW = metric.width + (paddingX * 2);
-    const badgeH = 50; // Taller Height
+    // Fixed width to match PFP
+    const badgeW = avatarSize;
+    const badgeH = 50;
 
-    // Adjusted coordinates for "Frame hugging text":
-    // Align Frame Left Edge with textStartX
-    const frameX = textStartX;
-    const textX = textStartX + paddingX; // Indent text inside the frame
-    const frameTop = statusY - (badgeH / 2);
+    // Position: Top Right
+    const margin = 60; // Consistent margin
+    const frameX = CARD_WIDTH - badgeW - margin; // Right-aligned
+    const frameTop = margin; // Top padding
+    const textY_Badge = frameTop + (badgeH / 2);
+    // Center text in badge
+    const textX_Badge = frameX + (badgeW / 2);
+    ctx.textAlign = 'center';
 
-    // Draw Frame Background - Premium Green Gradient (Theme Aligned)
-    const holoGrad = ctx.createLinearGradient(frameX, frameTop, frameX + badgeW, frameTop + badgeH);
-    holoGrad.addColorStop(0, 'rgba(19, 149, 114, 0.15)');
-    holoGrad.addColorStop(0.3, 'rgba(19, 149, 114, 0.35)'); // Accent Green
-    holoGrad.addColorStop(0.5, 'rgba(19, 149, 114, 0.45)'); // Slightly brighter center
-    holoGrad.addColorStop(0.7, 'rgba(19, 149, 114, 0.35)');
-    holoGrad.addColorStop(1, 'rgba(19, 149, 114, 0.15)');
-
+    // Draw Frame Background - Transparent (Unchecked)
     ctx.beginPath();
-    ctx.roundRect(frameX, frameTop, badgeW, badgeH, 10);
-    ctx.fillStyle = holoGrad;
-    ctx.fill();
+    ctx.roundRect(frameX, frameTop, badgeW, badgeH, 6); // Sharper radius
+    // ctx.fillStyle = 'rgba(19, 149, 114, 0.15)'; // Removed fill
+    // ctx.fill();
 
-    // Draw Frame Border - White/Holographic Outline
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.lineWidth = 2;
-    ctx.shadowColor = COLORS.accent;
-    ctx.shadowBlur = 15;
+    // Draw Frame Border - Technical/Precise
+    ctx.strokeStyle = 'rgba(143, 139, 134, 0.5)'; // Muted grey-ish border
+    ctx.lineWidth = 1;
+    ctx.shadowBlur = 0; // No Border Glow
     ctx.stroke();
 
-    ctx.fillStyle = '#ffffff'; // White text for Hologram Contrast
+    ctx.fillStyle = COLORS.text; // Use standard off-white text instead of pure white
 
-    // Text Glow - Double Layer for "Bloom"
-    ctx.shadowColor = COLORS.accent;
-    ctx.shadowBlur = 30; // Massive outer glow
-    ctx.fillText(statusText, textX, statusY);
-
-    ctx.shadowBlur = 10; // Tight inner glow
-    ctx.fillText(statusText, textX, statusY);
+    // Text - Clean, No Glow
+    ctx.shadowBlur = 0;
+    ctx.fillText(statusText, textX_Badge, textY_Badge);
 
     ctx.restore();
 
-    // Draw Tagline (Below Status Badge)
-    const tagline = data.tagline || "hi bulkie!";
-    let taglineSize = 56;
-    // Reset font for measurement
-    ctx.font = '600 56px Inter, sans-serif';
 
-    while (ctx.measureText(tagline).width > maxTextWidth && taglineSize > 20) {
-        taglineSize -= 2;
-        ctx.font = `600 ${taglineSize}px Inter, sans-serif`;
-    }
 
-    // Set color for tagline
-    ctx.fillStyle = COLORS.text;
 
-    const textY_Tagline = statusY + 70; // Increased spacing (was 50)
-    ctx.fillText(tagline, textStartX, textY_Tagline);
-
-    // Draw Footer URL (Bottom Right)
-    // Actually user said "Bottom Left". 
-    // Let's place it Bottom Left. 
-    // Margin x = 50px (to match typical internal padding)
-    ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Simple semi-transparent white
-    ctx.font = '500 20px Inter, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText("x.com/bulktrade", 50, CARD_HEIGHT - 40);
-    ctx.restore();
 
     const logoImg = await loadImageSafe('/logo.png');
     if (logoImg) {
@@ -311,9 +325,9 @@ export const renderCardToCanvas = async (canvas: HTMLCanvasElement, data: CardDa
         const logoWidth = logoImg.width * scale;
 
         ctx.save();
-        ctx.globalAlpha = 1.0; // "Original level" opacity logic applied to card logo too? User said "background PNGs opacity". I'll keep logo visible.
-        const margin = 50;
-        ctx.drawImage(logoImg, CARD_WIDTH - logoWidth - margin, margin, logoWidth, logoTargetHeight);
+        ctx.globalAlpha = 1.0;
+        const margin = 60; // Top/Left Margin (Consistent 60px)
+        ctx.drawImage(logoImg, margin, margin, logoWidth, logoTargetHeight);
         ctx.restore();
     }
 };

@@ -5,12 +5,14 @@ import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import { CardPreview } from '@/components/CardPreview';
 import { BackgroundSelector } from '@/components/BackgroundSelector';
+import { CardBackgroundSelector } from '@/components/CardBackgroundSelector';
 import { exportCanvasToPNG, downloadBlob, type CardData } from '@/lib/cardRenderer';
 
 export default function Home() {
     const [username, setUsername] = useState('');
     const [tagline, setTagline] = useState('hi bulkie!');
     const [selectedBackground, setSelectedBackground] = useState('/backgrounds/1.png');
+    const [selectedCardBackground, setSelectedCardBackground] = useState<string | null>('/background.png');
     const [cardData, setCardData] = useState<CardData | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
@@ -23,12 +25,26 @@ export default function Home() {
 
         const cleanUsername = username.trim().replace(/^@/, '');
 
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Fetch Twitter Display Name via our Proxy API
+        let displayName = '';
+        try {
+            const res = await fetch(`/api/twitter-info?username=${encodeURIComponent(cleanUsername)}`);
+            if (res.ok) {
+                const json = await res.json();
+                displayName = json.name || '';
+            }
+        } catch (e) {
+            console.error('Failed to fetch twitter info:', e);
+        }
+
+        console.log('[Generate] Display Name:', displayName);
 
         const data: CardData = {
             username: cleanUsername,
+            displayName: displayName,
             backgroundPath: selectedBackground,
-            tagline: tagline || 'hi bulkie!',
+            cardBackgroundPath: selectedCardBackground || undefined,
+            tagline: tagline,
         };
 
         setCardData(data);
@@ -50,7 +66,17 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen bg-bulk-bg text-bulk-text font-sans selection:bg-bulk-accent/20">
+        <div
+            className="min-h-screen bg-bulk-bg text-bulk-text font-sans selection:bg-bulk-accent/20 relative"
+            style={{
+                backgroundImage: 'url(/background.png)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed',
+            }}
+        >
+            {/* Dark overlay for better text readability */}
+            <div className="fixed inset-0 bg-bulk-bg/60 pointer-events-none" />
             <header className="fixed top-0 left-0 right-0 z-50 bg-bulk-bg/80 backdrop-blur-md border-b border-bulk-border">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -62,11 +88,11 @@ export default function Home() {
                 </div>
             </header>
 
-            <main className="min-h-screen pt-24 pb-12 px-6">
+            <main className="min-h-screen pt-24 pb-12 px-6 relative z-10">
                 <div className="w-full max-w-7xl mx-auto space-y-8">
 
                     <div className="space-y-4 animate-fade-in">
-                        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                        <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-ibm">
                             Generate Your <span className="text-bulk-accent">BULK Card</span>
                         </h1>
                     </div>
@@ -74,7 +100,7 @@ export default function Home() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
                         <div className="space-y-8 animate-fade-in delay-100">
-                            <div className="space-y-6 bg-bulk-panel/50 p-6 rounded-xl border border-bulk-border/50">
+                            <div className="space-y-6 bg-bulk-panel p-6 rounded-xl border border-bulk-border backdrop-blur-xl shadow-2xl">
                                 <Input
                                     label="X (Twitter) Username"
                                     placeholder="elonmusk"
@@ -94,6 +120,11 @@ export default function Home() {
                                 <BackgroundSelector
                                     selectedPath={selectedBackground}
                                     onSelect={setSelectedBackground}
+                                />
+
+                                <CardBackgroundSelector
+                                    selectedPath={selectedCardBackground}
+                                    onSelect={setSelectedCardBackground}
                                 />
 
                                 <div className="pt-2">
